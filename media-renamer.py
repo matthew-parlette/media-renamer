@@ -5,6 +5,7 @@ from os.path import abspath
 from os import getcwd
 
 modes = ['tv','movie']
+destinations = {'tv':'/media/tv','movie':'/media/movies'}
 
 def log_debug(message,identifier = ""):
   if args.debug:
