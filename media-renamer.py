@@ -5,6 +5,7 @@ from os.path import abspath
 from os import getcwd
 from sys import exit
 
+version = '0.0'
 modes = ['tv','movie']
 destinations = {'tv':'/media/tv','movie':'/media/movies'}
 modules = {'tv':'thetvdb'}
@@ -74,6 +75,7 @@ def menu(title,options):
       print "Invalid selection"
 
 argparser = ArgumentParser("Rename media files")
+argparser.add_argument('--version', action='version', version=version)
 argparser.add_argument('-d','--directory',help="Directory to process",nargs=1)
 argparser.add_argument('-t','--type',help="Specify the type of media being processed",nargs=1)
 argparser.add_argument('-i','--id',help="ID for the show or movie on thetvdb or themoviedb",nargs=1)
