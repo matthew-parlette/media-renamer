@@ -3,9 +3,11 @@
 from argparse import ArgumentParser
 from os.path import abspath
 from os import getcwd
+from sys import exit
 
 modes = ['tv','movie']
 destinations = {'tv':'/media/tv','movie':'/media/movies'}
+modules = {'tv':'thetvdb'}
 
 def log_debug(message,identifier = ""):
   if args.debug:
@@ -97,3 +99,13 @@ else:
   mode = menu("Media Type",options=modes)
   log_debug("Media type set from user selection as %s" % mode)
 
+#Load module
+try:
+  module = __import__(modules[mode])
+except ImportError:
+  log_error("Module %s was not found" % (modules[mode]))
+  exit(1)
+except KeyError:
+  log_error("Mode %s does not exist in modules dictionary (%s)" % (mode,str(modules)))
+  exit(1)
+log_debug("Module %s loaded" % (modules[mode]))
