@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from os.path import abspath
 from os import getcwd
 from sys import exit
+from importlib import import_module
 
 version = '0.0'
 modes = ['tv','movie']
@@ -103,11 +104,23 @@ else:
 
 #Load module
 try:
-  module = __import__(modules[mode])
+  #module = __import__(modules[mode])
+  module = __import__('thetvdb',fromlist=['TVShow'])
 except ImportError:
   log_error("Module %s was not found" % (modules[mode]))
   exit(1)
 except KeyError:
   log_error("Mode %s does not exist in modules dictionary (%s)" % (mode,str(modules)))
   exit(1)
-log_debug("Module %s loaded" % (modules[mode]))
+log_debug("Module %s loaded: %s" % (modules[mode],str(module)))
+
+#Get database ID for the working dir
+if args.id:
+  id = args.id[0]
+  log_debug("Database ID for media set from command line as %s" % id)
+else:
+  search_obj = getattr(module,'TVShow')() if mode is 'tv' else None #TODO: movie
+  log_debug("Search object created")
+  print "Directory: %s" % wd
+  term = raw_input('Search Term > ')
+  log_debug("Searching database for '%s'" % str(term))
