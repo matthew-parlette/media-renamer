@@ -132,3 +132,10 @@ else:
   selection = menu("Database Search Results",search_results)
   id = selection
   log_debug("Database ID for media set by user as %s" % id)
+
+#Create the database object for the specific media
+if id:
+  db_object = modules[mode](id) if mode is 'tv' else None #TODO: movie
+  log_debug("Database object created: %s" % str(db_object))
+else:
+  log_error("Programming error, ID is not set.")
