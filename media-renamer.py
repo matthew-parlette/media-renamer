@@ -5,11 +5,12 @@ from os.path import abspath
 from os import getcwd
 from sys import exit
 from importlib import import_module
+from thetvdb import thetvdb
 
 version = '0.0'
 modes = ['tv','movie']
 destinations = {'tv':'/media/tv','movie':'/media/movies'}
-modules = {'tv':'thetvdb'}
+modules = {'tv':thetvdb.TVShow}
 
 def log_debug(message,identifier = ""):
   if args.debug:
@@ -102,24 +103,16 @@ else:
   mode = menu("Media Type",options=modes)
   log_debug("Media type set from user selection as %s" % mode)
 
-#Load module
-try:
-  #module = __import__(modules[mode])
-  module = __import__('thetvdb',fromlist=['TVShow'])
-except ImportError:
-  log_error("Module %s was not found" % (modules[mode]))
-  exit(1)
-except KeyError:
-  log_error("Mode %s does not exist in modules dictionary (%s)" % (mode,str(modules)))
-  exit(1)
-log_debug("Module %s loaded: %s" % (modules[mode],str(module)))
+#Load database object
+#db_object = modules[mode]()
+#log_debug("DB Object loaded: %s" % (str(db_object)))
 
 #Get database ID for the working dir
 if args.id:
   id = args.id[0]
   log_debug("Database ID for media set from command line as %s" % id)
 else:
-  search_obj = getattr(module,'TVShow')() if mode is 'tv' else None #TODO: movie
+  search_obj = modules[mode]() if mode is 'tv' else None #TODO: movie
   log_debug("Search object created")
   print "Directory: %s" % wd
   term = raw_input('Search Term > ')
