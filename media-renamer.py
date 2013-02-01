@@ -68,11 +68,21 @@ def menu(title,options):
   while True:
     print title
     print '=' * len(title)
-    for i,option in enumerate(options):
-      print "%s. %s" % (str(i),option)
-    selection = int(getch())
+    if type(options) is list:
+      for i,option in enumerate(options):
+        print "%s. %s" % (str(i),option)
+    if type(options) is dict:
+      for i,option in enumerate(options.itervalues()):
+        print "%s. %s" % (str(i),option)
+    if len(options) < 10:
+      selection = int(getch())
+    else:
+      selection = int(raw_input())
     if selection < len(options):
-      return options[selection]
+      if type(options) is list:
+        return options[selection]
+      if type(options) is dict:
+        return options.keys()[selection]
     else:
       print "Invalid selection"
 
@@ -115,5 +125,10 @@ else:
   search_obj = modules[mode]() if mode is 'tv' else None #TODO: movie
   log_debug("Search object created")
   print "Directory: %s" % wd
+  
   term = raw_input('Search Term > ')
   log_debug("Searching database for '%s'" % str(term))
+  search_results = search_obj.search(term)
+  selection = menu("Database Search Results",search_results)
+  id = selection
+  log_debug("Database ID for media set by user as %s" % id)
