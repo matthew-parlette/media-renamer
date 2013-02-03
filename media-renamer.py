@@ -1,15 +1,17 @@
 #!/usr/bin/python
 
 from argparse import ArgumentParser
-from os.path import abspath
-from os import getcwd
+from os.path import abspath, exists, join
+from os import getcwd, makedirs
 from sys import exit
 from importlib import import_module
 from thetvdb import thetvdb
+from urllib import urlretrieve
 
 version = '0.0'
 modes = ['tv','movie']
-destinations = {'tv':'/media/tv','movie':'/media/movies'}
+#destinations = {'tv':'/media/tv','movie':'/media/movies'}
+destinations = {'tv':'/home/matt/Videos/TV'}
 modules = {'tv':thetvdb.TVShow}
 
 def log_debug(message,identifier = ""):
@@ -63,6 +65,16 @@ class _GetchWindows:
         return msvcrt.getch()
 
 ## end of http://code.activestate.com/recipes/134892/ }}}
+
+def download(url,dest_file,overwrite = False):
+  """Download the url to the destination file, only overwrite if the overwrite boolean is set."""
+  
+  if exists(dest_file) and overwrite is False:
+    return
+  
+  log_debug("Downloading file from %s" % url)
+  log_debug("Downloading file to %s" % dest_file)
+  urlretrieve(url,dest_file)
 
 def menu(title,options):
   while True:
@@ -138,4 +150,31 @@ if id:
   db_object = modules[mode](id) if mode is 'tv' else None #TODO: movie
   log_debug("Database object created: %s" % str(db_object))
 else:
+  db_object = None
   log_error("Programming error, ID is not set.")
+
+if db_object:
+  #See if the series or movie dir exists
+  dest_path = join(destinations[mode],db_object.get_samba_show_name())
+  if not exists(dest_path):
+    log_debug("Creating directory for media: %s" % dest_path)
+    makedirs(dest_path)
+  else:
+    log_debug("Media directory %s exists" % dest_path)
+  
+  #Download top-level artwork
+  download(db_object.fanart_url,join(dest_path,"fanart.jpg"),overwrite=False)
+  download(db_object.poster_url,join(dest_path,"folder.jpg"),overwrite=False)
+  
+  #TV specific actions
+  if mode is 'tv':
+    #Determine season number
+    
+    #Create season directory
+    
+    #Download artwork
+    
+    #Rename and move file
+    
+    #Download subtitles
+    pass
