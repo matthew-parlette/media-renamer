@@ -2,7 +2,7 @@
 
 from argparse import ArgumentParser
 from os.path import abspath, exists, join
-from os import getcwd, makedirs
+from os import getcwd, makedirs, walk
 from sys import exit
 from importlib import import_module
 from thetvdb import thetvdb
@@ -10,6 +10,7 @@ from urllib import urlretrieve
 
 version = '0.0'
 modes = ['tv','movie']
+media_extensions = ('mkv','avi','mp4','mov')
 #destinations = {'tv':'/media/tv','movie':'/media/movies'}
 destinations = {'tv':'/home/matt/Videos/TV'}
 modules = {'tv':thetvdb.TVShow}
@@ -166,15 +167,28 @@ if db_object:
   download(db_object.fanart_url,join(dest_path,"fanart.jpg"),overwrite=False)
   download(db_object.poster_url,join(dest_path,"folder.jpg"),overwrite=False)
   
-  #TV specific actions
-  if mode is 'tv':
-    #Determine season number
-    
-    #Create season directory
-    
-    #Download artwork
-    
-    #Rename and move file
-    
-    #Download subtitles
-    pass
+  #Generate a list of files in working dir
+  file_list = []
+  for root, dirname, filenames in walk(wd):
+    for filename in filenames:
+      if filename.endswith(media_extensions):
+        log_debug("File %s determined to be a media file. Adding it to the list" % filename)
+        file_list.append(join(root,filename))
+      else:
+        log_debug("File %s determined to be a non-media file. Skipping this file" % filename)
+  
+  log_debug("File list:\n%s" % str(file_list))
+  
+  for filename in file_list:
+    #TV specific actions
+    if mode is 'tv':
+      #Determine season number
+      
+      #Create season directory
+      
+      #Download artwork
+      
+      #Rename and move file
+      
+      #Download subtitles
+      pass
