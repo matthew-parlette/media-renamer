@@ -218,7 +218,10 @@ if db_object:
       #Create season directory
       season_path = join(dest_path,"Season %s" % (str(int(season))))
       if not exists(season_path):
-        makedirs(season_path)
+        if args.dry_run:
+          print "Dry Run: Would create season dir %s" % season_path
+        else:
+          makedirs(season_path)
         
         #Download artwork
         #TODO: Find a way to get the highest reviewed season art
