@@ -2,7 +2,7 @@
 
 from argparse import ArgumentParser
 from os.path import abspath, exists, join, basename, splitext
-from os import getcwd, makedirs, walk, rename
+from os import getcwd, makedirs, walk, rename, system
 from sys import exit
 from importlib import import_module
 from thetvdb import thetvdb
@@ -243,7 +243,9 @@ if db_object:
       if args.dry_run:
         print "Dry Run: Would move file:\n\tSource: %s\n\tDestination: %s" % (filename,join(season_path,new_filename))
       else:
-        rename(filename,join(season_path,new_filename))
+        #rename generates 'OSError: [Errno 18] Invalid cross-device link'
+        #rename(filename,join(season_path,new_filename))
+        os.system("mv %s %s" (filename,join(season_path,new_filename)))
       
       #Download subtitles
       #TODO
