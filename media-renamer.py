@@ -108,9 +108,10 @@ argparser.add_argument('-d','--directory',help="Directory to process",nargs=1)
 argparser.add_argument('-t','--type',help="Specify the type of media being processed",nargs=1)
 argparser.add_argument('-i','--id',help="ID for the show or movie on thetvdb or themoviedb",nargs=1)
 argparser.add_argument('--debug',help="Display debug messages",action='store_true')
+argparser.add_argument('--dry-run',help="Run the script but don't actually move or download anything",action='store_true',default=False)
 
 args = argparser.parse_args()
-
+print str(args)
 getch = _Getch()
 
 #Get working directory
@@ -162,13 +163,20 @@ if db_object:
   dest_path = join(destinations[mode],db_object.get_samba_show_name())
   if not exists(dest_path):
     log_debug("Creating directory for media: %s" % dest_path)
-    makedirs(dest_path)
+    if arg.dry_run:
+      print "Dry Run: Would create season directory: %s" % (dest_path)
+    else:
+      makedirs(dest_path)
   else:
     log_debug("Media directory %s exists" % dest_path)
   
   #Download top-level artwork
-  download(db_object.fanart_url,join(dest_path,"fanart.jpg"),overwrite=False)
-  download(db_object.poster_url,join(dest_path,"folder.jpg"),overwrite=False)
+  if args.dry_run:
+    print "Dry Run: Would download fanart:\n\tURL: %s\n\tDestination: %s" % (db_object.fanart_url,join(dest_path,"fanart.jpg"))
+    print "Dry Run: Would download poster:\n\tURL: %s\n\tDestination: %s" % (db_object.poster_url,join(dest_path,"folder.jpg"))
+  else:
+    download(db_object.fanart_url,join(dest_path,"fanart.jpg"),overwrite=False)
+    download(db_object.poster_url,join(dest_path,"folder.jpg"),overwrite=False)
   
   #Generate a list of files in working dir
   file_list = []
@@ -203,6 +211,11 @@ if db_object:
         season = raw_input("Season Number > ")
         log_debug("Season read from user input as %s" % season)
       
+      #If no season is given, assume the user cancelled
+      if season is '':
+        print "Skipping %s..." % filename
+        continue
+      
       #Create season directory
       season_path = join(dest_path,"Season %s" % (str(int(season))))
       if not exists(season_path):
@@ -225,7 +238,10 @@ if db_object:
       new_filename = db_object.get_samba_filename(season_number=season,episode_number=episode)
       new_filename += extension
       log_debug("Renaming file: %s -> %s" % (filename,join(season_path,new_filename)))
-      #rename(filename,join(season_path,new_filename))
+      if args.dry_run:
+        print "Dry Run: Would move file:\n\tSource: %s\n\tDestination: %s" % (filename,join(season_path,new_filename))
+      else:
+        rename(filename,join(season_path,new_filename))
       
       #Download subtitles
       #TODO
