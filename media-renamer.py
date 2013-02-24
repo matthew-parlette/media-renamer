@@ -9,11 +9,10 @@ from thetvdb import thetvdb
 from urllib import urlretrieve
 from re import compile
 
-version = '0.0'
+version = '0.5'
 modes = ['tv','movie']
 media_extensions = ('mkv','avi','mp4','mov')
-#destinations = {'tv':'/media/tv','movie':'/media/movies'}
-destinations = {'tv':'/home/matt/Videos/TV'}
+destinations = {'tv':'/media/tv','movie':'/media/movies'}
 modules = {'tv':thetvdb.TVShow}
 #Test regex here: http://www.pythonregex.com/
 filename_regex = {'tv':'(?P<season>\d{1,})(?:[xXeE\,])(?P<episode>\d{1,})(?:[-\.\seE])*(?P<second_episode>\d{1,})?'}
