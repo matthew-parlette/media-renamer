@@ -245,7 +245,7 @@ if db_object:
       else:
         #rename generates 'OSError: [Errno 18] Invalid cross-device link'
         #rename(filename,join(season_path,new_filename))
-        system("mv %s %s" (filename,join(season_path,new_filename)))
+        system("mv %s %s" % (filename,join(season_path,new_filename)))
       
       #Download subtitles
       #TODO
