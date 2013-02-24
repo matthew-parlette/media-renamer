@@ -162,7 +162,7 @@ if db_object:
   dest_path = join(destinations[mode],db_object.get_samba_show_name())
   if not exists(dest_path):
     log_debug("Creating directory for media: %s" % dest_path)
-    if arg.dry_run:
+    if args.dry_run:
       print "Dry Run: Would create season directory: %s" % (dest_path)
     else:
       makedirs(dest_path)
