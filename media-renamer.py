@@ -101,6 +101,9 @@ def menu(title,options):
     else:
       print "Invalid selection"
 
+def escape_path(path):
+  return path.replace(' ','\ ').replace('&','\&').replace('[','\[').replace(']','\]')
+
 argparser = ArgumentParser("Rename media files")
 argparser.add_argument('--version', action='version', version=version)
 argparser.add_argument('-d','--directory',help="Directory to process",nargs=1)
@@ -245,7 +248,7 @@ if db_object:
       else:
         #rename generates 'OSError: [Errno 18] Invalid cross-device link'
         #rename(filename,join(season_path,new_filename))
-        system("mv %s %s" % (filename.replace(' ','\ '),join(season_path,new_filename).replace(' ','\ ')))
+        system("mv %s %s" % (escape_path(filename),escape_path(join(season_path,new_filename))))
       
       #Download subtitles
       #TODO
