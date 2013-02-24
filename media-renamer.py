@@ -1,12 +1,13 @@
 #!/usr/bin/python
 
 from argparse import ArgumentParser
-from os.path import abspath, exists, join
-from os import getcwd, makedirs, walk
+from os.path import abspath, exists, join, basename, splitext
+from os import getcwd, makedirs, walk, rename
 from sys import exit
 from importlib import import_module
 from thetvdb import thetvdb
 from urllib import urlretrieve
+from re import compile
 
 version = '0.0'
 modes = ['tv','movie']
@@ -14,13 +15,15 @@ media_extensions = ('mkv','avi','mp4','mov')
 #destinations = {'tv':'/media/tv','movie':'/media/movies'}
 destinations = {'tv':'/home/matt/Videos/TV'}
 modules = {'tv':thetvdb.TVShow}
+#Test regex here: http://www.pythonregex.com/
+filename_regex = {'tv':'(?P<season>\d{1,})(?:[xXeE\,])(?P<episode>\d{1,})(?:[-\.\seE])*(?P<second_episode>\d{1,})?'}
 
 def log_debug(message,identifier = ""):
   if args.debug:
     if identifier:
       print "Debug:\t%s:\t%s" % (identifier,message)
     else:
-      print "Debug:\t\t%s" % (message)
+      print "Debug:\t%s" % (message)
 
 def log_error(message,identifier = ""):
   if args.debug:
@@ -180,15 +183,49 @@ if db_object:
   log_debug("File list:\n%s" % str(file_list))
   
   for filename in file_list:
+    extension = splitext(filename)[1]
+    log_debug("Extension set from filename as %s" % extension)
     #TV specific actions
     if mode is 'tv':
-      #Determine season number
+      #Parse filename for season/episode
+      regex = compile(filename_regex[mode])
+      log_debug("Running regex on file: %s" % filename)
+      r = regex.search(filename)
+      parts = r.groupdict() if r else None
+      log_debug("File parts read as %s" % str(parts))
+      
+      #Determine Season
+      if parts and 'season' in parts:
+        season = int(parts['season'])
+        log_debug("Season set from regular expression as %s" % season)
+      else:
+        print filename
+        season = raw_input("Season Number > ")
+        log_debug("Season read from user input as %s" % season)
       
       #Create season directory
+      season_path = join(dest_path,"Season %s" % (str(int(season))))
+      if not exists(season_path):
+        makedirs(season_path)
+        
+        #Download artwork
+        #TODO: Find a way to get the highest reviewed season art
+        #download(db_object.poster_url,join(season_path,"folder.jpg"),overwrite=False)
       
-      #Download artwork
+      #Determine Episode
+      if parts and 'episode' in parts:
+        episode = int(parts['episode'])
+        log_debug("Episode set from regular expression as %s" % episode)
+      else:
+        print filename
+        episode = raw_input("Episode Number > ")
+        log_debug("Episode read from user input as %s" % episode)
       
       #Rename and move file
+      new_filename = db_object.get_samba_filename(season_number=season,episode_number=episode)
+      new_filename += extension
+      log_debug("Renaming file: %s -> %s" % (filename,join(season_path,new_filename)))
+      #rename(filename,join(season_path,new_filename))
       
       #Download subtitles
-      pass
+      #TODO
