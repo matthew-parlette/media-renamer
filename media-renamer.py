@@ -172,7 +172,8 @@ if db_object:
   #See if the series or movie dir exists
   dest_path = join(destinations[mode],db_object.get_samba_show_name())
   if not exists(dest_path):
-    actions['mkdir'].append(dest_path)
+    if dest_path not in actions['mkdir']:
+      actions['mkdir'].append(dest_path)
   else:
     log_debug("Media directory %s exists" % dest_path)
   
@@ -225,7 +226,8 @@ if db_object:
       #Create season directory
       season_path = join(dest_path,"Season %s" % (str(int(season))))
       if not exists(season_path):
-        actions['mkdir'].append(season_path)
+        if season_path not in actions['mkdir']:
+          actions['mkdir'].append(season_path)
         
         #Download artwork
         #TODO: Find a way to get the highest reviewed season art
