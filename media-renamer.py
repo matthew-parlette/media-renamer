@@ -120,7 +120,9 @@ getch = _Getch()
 # the value will be a list of lists of parameters
 # 'move':[['source1','destination1'],['source2','destination2']]
 #actions: move, download
-actions = {'move':[],'download':[]}
+actions = {'move':[],
+           'download':[],
+           'mkdir':[]}
 
 #Get working directory
 if args.directory:
@@ -170,11 +172,7 @@ if db_object:
   #See if the series or movie dir exists
   dest_path = join(destinations[mode],db_object.get_samba_show_name())
   if not exists(dest_path):
-    log_debug("Creating directory for media: %s" % dest_path)
-    if args.dry_run:
-      print "Dry Run: Would create season directory: %s" % (dest_path)
-    else:
-      makedirs(dest_path)
+    actions['mkdir'].append(dest_path)
   else:
     log_debug("Media directory %s exists" % dest_path)
   
@@ -227,10 +225,7 @@ if db_object:
       #Create season directory
       season_path = join(dest_path,"Season %s" % (str(int(season))))
       if not exists(season_path):
-        if args.dry_run:
-          print "Dry Run: Would create season dir %s" % season_path
-        else:
-          makedirs(season_path)
+        actions['mkdir'].append(season_path)
         
         #Download artwork
         #TODO: Find a way to get the highest reviewed season art
@@ -257,7 +252,16 @@ if db_object:
 
 if actions:
   log_debug("Processing actions:\n%s" % (str(actions)))
-  print "Actions pending (%d moves, %d downloads)" % (len(actions['move']),len(actions['download']))
+  print "Actions pending (%d new directories, %d moves, %d downloads)" % (len(actions['mkdir']),len(actions['move']),len(actions['download']))
+  
+  if len(actions['mkdir']):
+    for directory in actions['mkdir']:
+      if not exists(directory):
+        if args.dry_run:
+          print "Dry Run: Would create dir %s" % directory
+        else:
+          log_debug("Creating directory %s" % str(directory))
+          makedirs(directory)
   
   if len(actions['move']):
     for parameters in actions['move']:
