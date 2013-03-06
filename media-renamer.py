@@ -116,6 +116,12 @@ args = argparser.parse_args()
 print str(args)
 getch = _Getch()
 
+#all actions will be saved to this dictionary, they key will be the action
+# the value will be a list of lists of parameters
+# 'move':[['source1','destination1'],['source2','destination2']]
+#actions: move, download
+actions = {'move':[],'download':[]}
+
 #Get working directory
 if args.directory:
   wd = abspath(args.directory[0])
@@ -242,13 +248,26 @@ if db_object:
       #Rename and move file
       new_filename = db_object.get_samba_filename(season_number=season,episode_number=episode)
       new_filename += extension
-      log_debug("Renaming file: %s -> %s" % (filename,join(season_path,new_filename)))
-      if args.dry_run:
-        print "Dry Run: Would move file:\n\tSource: %s\n\tDestination: %s" % (filename,join(season_path,new_filename))
-      else:
-        #rename generates 'OSError: [Errno 18] Invalid cross-device link'
-        #rename(filename,join(season_path,new_filename))
-        system("mv %s %s" % (escape_path(filename),escape_path(join(season_path,new_filename))))
+      parameters = [filename,join(season_path,new_filename)]
+      log_debug("Adding move entry to actions: %s -> %s" % (parameters[0],parameters[1]))
+      actions['move'].append(parameters)
       
       #Download subtitles
       #TODO
+
+if actions:
+  log_debug("Processing actions:\n%s" % (str(actions)))
+  print "Actions pending (%d moves, %d downloads)" % (len(actions['move']),len(actions['download']))
+  
+  if len(actions['move']):
+    for parameters in actions['move']:
+      if len(parameters) is 2:
+        log_debug("Renaming file: %s -> %s" % (parameters[0],parameters[1]))
+        if args.dry_run:
+          print "Dry Run: Would move file:\n\tSource: %s\n\tDestination: %s" % (parameters[0],parameters[1])
+        else:
+          #rename generates 'OSError: [Errno 18] Invalid cross-device link'
+          #rename(filename,join(season_path,new_filename))
+          system("mv %s %s" % (escape_path(parameters[0]),escape_path(parameters[1])))
+      else:
+        log_error("parameters list should have exactly two elements: %s" % str(parameters))
