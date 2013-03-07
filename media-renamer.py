@@ -299,7 +299,7 @@ if actions:
   print "Actions pending (%d new directories, %d moves, %d downloads)" % (len(actions['mkdir']),len(actions['move']),len(actions['download']))
   
   log_debug("Creating Progress object")
-  progress = Progress(goal=len(actions['mkdir'])+len(actions['move'])+len(actions['download'])
+  progress = Progress(goal=len(actions['mkdir'])+len(actions['move'])+len(actions['download']))
   
   if len(actions['mkdir']):
     for directory in actions['mkdir']:
