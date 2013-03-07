@@ -69,47 +69,20 @@ class _GetchWindows:
 
 ## end of http://code.activestate.com/recipes/134892/ }}}
 
-## {{{ https://github.com/lericson/fish/blob/master/fish.py
-
-class ANSIControl(object):
-  def __init__(self, outfile=stderr, flush=True):
-      self.outfile = outfile
-      self.flush = flush
-
-  def ansi(self, command):
-      self.outfile.write("\x1b[%s" % command)
-      if self.flush:
-          self.outfile.flush()
-
-  def clear_line_right(self): self.ansi("0K\r")
-  def clear_line_left(self): self.ansi("1K\r")
-  def clear_line_whole(self): self.ansi("2K\r")
-  def clear_forward(self): self.ansi("0J")
-  def clear_backward(self): self.ansi("1J")
-  def clear_whole(self): self.ansi("2J")
-  def save_cursor(self): self.ansi("s")
-  def restore_cursor(self): self.ansi("u")
-  def move_up(self, n): self.ansi("%dF" % n)
-  def move_down(self, n): self.ansi("%dE" % n)
-
-## end of https://github.com/lericson/fish/blob/master/fish.py }}}
-
 class Progress(object):
   def __init__(self,goal,output=stdout,line_length=10):
     self.current = 0
     self.goal = goal
     self.output = output
     self.line_length = line_length
-    self.ansi = ANSIControl(self.output)
   
   def step(self):
     self.current += 1
     self.refresh()
   
   def refresh(self):
-    #self.ansi.clear_line_whole()
+    #Clear the line and move to the beginning of the line
     self.output.write(chr(27) + '[2K\r')
-    #self.output.write(chr(27) + '[s')
     self.output.flush()
     #percent complete is calculated as a whole number (50 is 50%)
     percent_complete = int((float(self.current) / float(self.goal)) * 100)
