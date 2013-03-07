@@ -273,6 +273,8 @@ if actions:
     for parameters in actions['move']:
       if len(parameters) is 2:
         log_debug("Renaming file: %s -> %s" % (parameters[0],parameters[1]))
+        log_debug("\tEscaped source: %s" % escape_path(parameters[0]))
+        log_debug("\tEscaped destination: %s" % escape_path(parameters[1]))
         if args.dry_run:
           print "Dry Run: Would move file:\n\tSource: %s\n\tDestination: %s" % (parameters[0],parameters[1])
         else:
