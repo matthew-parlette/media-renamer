@@ -111,8 +111,9 @@ class Progress(object):
     #percent complete is calculated as a whole number (50 is 50%)
     percent_complete = (self.current / self.goal) * 100
     bars_complete = percent_complete / self.line_length
-    line = '|'*bars
-    self.output.write(line.ljust(self.line_length,'.'))
+    line = '|'*bars_complete
+    line = line.ljust(self.line_length,'.'))
+    self.output.write("%s %s%%" % (line,str(percent_complete)))
     self.output.flush()
 
 def download(url,dest_file,overwrite = False):
