@@ -107,9 +107,12 @@ class Progress(object):
     self.refresh()
   
   def refresh(self):
-    self.ansi.clear_line_whole()
+    #self.ansi.clear_line_whole()
+    self.output.write(chr(27) + '[2K\r')
+    #self.output.write(chr(27) + '[s')
+    self.output.flush()
     #percent complete is calculated as a whole number (50 is 50%)
-    percent_complete = (self.current / self.goal) * 100
+    percent_complete = int((float(self.current) / float(self.goal)) * 100)
     bars_complete = percent_complete / self.line_length
     line = '|'*bars_complete
     line = line.ljust(self.line_length,'.')
@@ -336,3 +339,6 @@ if actions:
           progress.step()
       else:
         log_error("parameters list should have exactly two elements: %s" % str(parameters))
+
+#Print one line at the end
+print ""
