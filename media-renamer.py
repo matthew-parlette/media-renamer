@@ -3,7 +3,7 @@
 from argparse import ArgumentParser
 from os.path import abspath, exists, join, basename, splitext
 from os import getcwd, makedirs, walk, rename, system
-from sys import exit
+from sys import exit,stdout,stderr
 from importlib import import_module
 from thetvdb import thetvdb
 from urllib import urlretrieve
@@ -68,6 +68,52 @@ class _GetchWindows:
         return msvcrt.getch()
 
 ## end of http://code.activestate.com/recipes/134892/ }}}
+
+## {{{ https://github.com/lericson/fish/blob/master/fish.py
+
+class ANSIControl(object):
+  def __init__(self, outfile=stderr, flush=True):
+      self.outfile = outfile
+      self.flush = flush
+
+  def ansi(self, command):
+      self.outfile.write("\x1b[%s" % command)
+      if self.flush:
+          self.outfile.flush()
+
+  def clear_line_right(self): self.ansi("0K\r")
+  def clear_line_left(self): self.ansi("1K\r")
+  def clear_line_whole(self): self.ansi("2K\r")
+  def clear_forward(self): self.ansi("0J")
+  def clear_backward(self): self.ansi("1J")
+  def clear_whole(self): self.ansi("2J")
+  def save_cursor(self): self.ansi("s")
+  def restore_cursor(self): self.ansi("u")
+  def move_up(self, n): self.ansi("%dF" % n)
+  def move_down(self, n): self.ansi("%dE" % n)
+
+## end of https://github.com/lericson/fish/blob/master/fish.py }}}
+
+class Progress(object):
+  def __init__(self,goal,output=stdout,line_length=10):
+    self.current = 0
+    self.goal = goal
+    self.output = output
+    self.line_length = line_length
+    self.ansi = ANSIControl(self.output)
+  
+  def step(self):
+    self.current += 1
+    self.refresh()
+  
+  def refresh(self):
+    self.ansi.clear_line_whole()
+    #percent complete is calculated as a whole number (50 is 50%)
+    percent_complete = (self.current / self.goal) * 100
+    bars_complete = percent_complete / self.line_length
+    line = '|'*bars
+    self.output.write(line.ljust(self.line_length,'.'))
+    self.output.flush()
 
 def download(url,dest_file,overwrite = False):
   """Download the url to the destination file, only overwrite if the overwrite boolean is set."""
@@ -252,6 +298,9 @@ if actions:
   log_debug("Processing actions:\n%s" % (str(actions)))
   print "Actions pending (%d new directories, %d moves, %d downloads)" % (len(actions['mkdir']),len(actions['move']),len(actions['download']))
   
+  log_debug("Creating Progress object")
+  progress = Progress(goal=len(actions['mkdir'])+len(actions['move'])+len(actions['download'])
+  
   if len(actions['mkdir']):
     for directory in actions['mkdir']:
       if not exists(directory):
@@ -260,6 +309,7 @@ if actions:
         else:
           log_debug("Creating directory %s" % str(directory))
           makedirs(directory)
+          progress.step()
   
   if len(actions['download']):
     for parameters in actions['download']:
@@ -268,6 +318,7 @@ if actions:
           print "Dry Run: Would download:\n\tURL: %s\n\tDestination: %s" % (parameters[0],parameters[1])
         else:
           download(parameters[0],parameters[1],overwrite=False)
+          progress.step()
   
   if len(actions['move']):
     for parameters in actions['move']:
@@ -281,5 +332,6 @@ if actions:
           #rename generates 'OSError: [Errno 18] Invalid cross-device link'
           #rename(filename,join(season_path,new_filename))
           system("mv %s %s" % (escape_path(parameters[0]),escape_path(parameters[1])))
+          progress.step()
       else:
         log_error("parameters list should have exactly two elements: %s" % str(parameters))
