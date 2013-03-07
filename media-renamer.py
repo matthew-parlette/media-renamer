@@ -178,12 +178,8 @@ if db_object:
     log_debug("Media directory %s exists" % dest_path)
   
   #Download top-level artwork
-  if args.dry_run:
-    print "Dry Run: Would download fanart:\n\tURL: %s\n\tDestination: %s" % (db_object.fanart_url,join(dest_path,"fanart.jpg"))
-    print "Dry Run: Would download poster:\n\tURL: %s\n\tDestination: %s" % (db_object.poster_url,join(dest_path,"folder.jpg"))
-  else:
-    download(db_object.fanart_url,join(dest_path,"fanart.jpg"),overwrite=False)
-    download(db_object.poster_url,join(dest_path,"folder.jpg"),overwrite=False)
+  actions['download'].append([db_object.fanart_url,join(dest_path,"fanart.jpg")])
+  actions['download'].append([db_object.poster_url,join(dest_path,"folder.jpg")])
   
   #Generate a list of files in working dir
   file_list = []
@@ -264,6 +260,14 @@ if actions:
         else:
           log_debug("Creating directory %s" % str(directory))
           makedirs(directory)
+  
+  if len(actions['download']):
+    for parameters in actions['download']:
+      if len(parameters) is 2:
+        if args.dry_run:
+          print "Dry Run: Would download:\n\tURL: %s\n\tDestination: %s" % (parameters[0],parameters[1])
+        else:
+          download(parameters[0],parameters[1],overwrite=False)
   
   if len(actions['move']):
     for parameters in actions['move']:
