@@ -102,7 +102,7 @@ def menu(title,options):
       print "Invalid selection"
 
 def escape_path(path):
-  return path.replace(' ','\ ').replace('&','\&').replace('[','\[').replace(']','\]').replace("'","\'")
+  return path.replace(' ','\ ').replace('&','\&').replace('[','\[').replace(']','\]').replace("'","\\'").replace('(','\(').replace(')','\)').replace('$','\$')
 
 argparser = ArgumentParser("Rename media files")
 argparser.add_argument('--version', action='version', version=version)
