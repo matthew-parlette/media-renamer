@@ -3,7 +3,7 @@
 from argparse import ArgumentParser
 from os.path import abspath, exists, join, basename, splitext
 from os import getcwd, makedirs, walk, rename, system
-from sys import exit
+from sys import exit,stdout,stderr
 from importlib import import_module
 from thetvdb import thetvdb
 from urllib import urlretrieve
@@ -69,6 +69,29 @@ class _GetchWindows:
 
 ## end of http://code.activestate.com/recipes/134892/ }}}
 
+class Progress(object):
+  def __init__(self,goal,output=stdout,line_length=10):
+    self.current = 0
+    self.goal = goal
+    self.output = output
+    self.line_length = line_length
+  
+  def step(self):
+    self.current += 1
+    self.refresh()
+  
+  def refresh(self):
+    #Clear the line and move to the beginning of the line
+    self.output.write(chr(27) + '[2K\r')
+    self.output.flush()
+    #percent complete is calculated as a whole number (50 is 50%)
+    percent_complete = int((float(self.current) / float(self.goal)) * 100)
+    bars_complete = percent_complete / self.line_length
+    line = '|'*bars_complete
+    line = line.ljust(self.line_length,'.')
+    self.output.write("%s %s%%" % (line,str(percent_complete)))
+    self.output.flush()
+
 def download(url,dest_file,overwrite = False):
   """Download the url to the destination file, only overwrite if the overwrite boolean is set."""
   
@@ -115,6 +138,14 @@ argparser.add_argument('--dry-run',help="Run the script but don't actually move 
 args = argparser.parse_args()
 print str(args)
 getch = _Getch()
+
+#all actions will be saved to this dictionary, they key will be the action
+# the value will be a list of lists of parameters
+# 'move':[['source1','destination1'],['source2','destination2']]
+#actions: move, download
+actions = {'move':[],
+           'download':[],
+           'mkdir':[]}
 
 #Get working directory
 if args.directory:
@@ -164,21 +195,14 @@ if db_object:
   #See if the series or movie dir exists
   dest_path = join(destinations[mode],db_object.get_samba_show_name())
   if not exists(dest_path):
-    log_debug("Creating directory for media: %s" % dest_path)
-    if args.dry_run:
-      print "Dry Run: Would create season directory: %s" % (dest_path)
-    else:
-      makedirs(dest_path)
+    if dest_path not in actions['mkdir']:
+      actions['mkdir'].append(dest_path)
   else:
     log_debug("Media directory %s exists" % dest_path)
   
   #Download top-level artwork
-  if args.dry_run:
-    print "Dry Run: Would download fanart:\n\tURL: %s\n\tDestination: %s" % (db_object.fanart_url,join(dest_path,"fanart.jpg"))
-    print "Dry Run: Would download poster:\n\tURL: %s\n\tDestination: %s" % (db_object.poster_url,join(dest_path,"folder.jpg"))
-  else:
-    download(db_object.fanart_url,join(dest_path,"fanart.jpg"),overwrite=False)
-    download(db_object.poster_url,join(dest_path,"folder.jpg"),overwrite=False)
+  actions['download'].append([db_object.fanart_url,join(dest_path,"fanart.jpg")])
+  actions['download'].append([db_object.poster_url,join(dest_path,"folder.jpg")])
   
   #Generate a list of files in working dir
   file_list = []
@@ -221,10 +245,8 @@ if db_object:
       #Create season directory
       season_path = join(dest_path,"Season %s" % (str(int(season))))
       if not exists(season_path):
-        if args.dry_run:
-          print "Dry Run: Would create season dir %s" % season_path
-        else:
-          makedirs(season_path)
+        if season_path not in actions['mkdir']:
+          actions['mkdir'].append(season_path)
         
         #Download artwork
         #TODO: Find a way to get the highest reviewed season art
@@ -242,13 +264,54 @@ if db_object:
       #Rename and move file
       new_filename = db_object.get_samba_filename(season_number=season,episode_number=episode)
       new_filename += extension
-      log_debug("Renaming file: %s -> %s" % (filename,join(season_path,new_filename)))
-      if args.dry_run:
-        print "Dry Run: Would move file:\n\tSource: %s\n\tDestination: %s" % (filename,join(season_path,new_filename))
-      else:
-        #rename generates 'OSError: [Errno 18] Invalid cross-device link'
-        #rename(filename,join(season_path,new_filename))
-        system("mv %s %s" % (escape_path(filename),escape_path(join(season_path,new_filename))))
+      parameters = [filename,join(season_path,new_filename)]
+      log_debug("Adding move entry to actions: %s -> %s" % (parameters[0],parameters[1]))
+      actions['move'].append(parameters)
       
       #Download subtitles
       #TODO
+
+if actions:
+  log_debug("Processing actions:\n%s" % (str(actions)))
+  print "Actions pending (%d new directories, %d moves, %d downloads)" % (len(actions['mkdir']),len(actions['move']),len(actions['download']))
+  
+  log_debug("Creating Progress object")
+  progress = Progress(goal=len(actions['mkdir'])+len(actions['move'])+len(actions['download']))
+  
+  if len(actions['mkdir']):
+    for directory in actions['mkdir']:
+      if not exists(directory):
+        if args.dry_run:
+          print "Dry Run: Would create dir %s" % directory
+        else:
+          log_debug("Creating directory %s" % str(directory))
+          makedirs(directory)
+          progress.step()
+  
+  if len(actions['download']):
+    for parameters in actions['download']:
+      if len(parameters) is 2:
+        if args.dry_run:
+          print "Dry Run: Would download:\n\tURL: %s\n\tDestination: %s" % (parameters[0],parameters[1])
+        else:
+          download(parameters[0],parameters[1],overwrite=False)
+          progress.step()
+  
+  if len(actions['move']):
+    for parameters in actions['move']:
+      if len(parameters) is 2:
+        log_debug("Renaming file: %s -> %s" % (parameters[0],parameters[1]))
+        log_debug("Escaped source: %s" % escape_path(parameters[0]))
+        log_debug("Escaped destination: %s" % escape_path(parameters[1]))
+        if args.dry_run:
+          print "Dry Run: Would move file:\n\tSource: %s\n\tDestination: %s" % (parameters[0],parameters[1])
+        else:
+          #rename generates 'OSError: [Errno 18] Invalid cross-device link'
+          #rename(filename,join(season_path,new_filename))
+          system("mv %s %s" % (escape_path(parameters[0]),escape_path(parameters[1])))
+          progress.step()
+      else:
+        log_error("parameters list should have exactly two elements: %s" % str(parameters))
+
+#Print one line at the end
+print ""
