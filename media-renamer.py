@@ -112,7 +112,7 @@ class Progress(object):
     percent_complete = (self.current / self.goal) * 100
     bars_complete = percent_complete / self.line_length
     line = '|'*bars_complete
-    line = line.ljust(self.line_length,'.'))
+    line = line.ljust(self.line_length,'.')
     self.output.write("%s %s%%" % (line,str(percent_complete)))
     self.output.flush()
 
