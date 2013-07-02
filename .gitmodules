@@ -1,3 +1,6 @@
 [submodule "thetvdb"]
 	path = thetvdb
 	url = https://github.com/matthew-parlette/thetvdb.git
+[submodule "themoviedb"]
+	path = themoviedb
+	url = https://github.com/doganaydin/themoviedb.git
