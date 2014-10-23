@@ -12,6 +12,7 @@ from re import compile
 version = '0.5'
 modes = ['tv','movie']
 media_extensions = ('mkv','avi','mp4','mov')
+subtitle_extensions = ('srt')
 destinations = {'tv':'/media/tv','movie':'/media/movies'}
 modules = {'tv':thetvdb.TVShow}
 #Test regex here: http://www.pythonregex.com/
@@ -211,6 +212,9 @@ if db_object:
       if filename.endswith(media_extensions):
         log_debug("File %s determined to be a media file. Adding it to the list" % filename)
         file_list.append(join(root,filename))
+      elif filename.endswith(subtitle_extensions):
+        log_debug("File %s determined to be a subtitle file. Adding it to the list" % filename)
+        file_list.append(join(root,filename))
       else:
         log_debug("File %s determined to be a non-media file. Skipping this file" % filename)
   
@@ -267,7 +271,7 @@ if db_object:
       parameters = [filename,join(season_path,new_filename)]
       log_debug("Adding move entry to actions: %s -> %s" % (parameters[0],parameters[1]))
       actions['move'].append(parameters)
-      
+
       #Download subtitles
       #TODO
 
